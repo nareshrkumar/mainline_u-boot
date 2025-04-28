@@ -2,6 +2,8 @@
 /*
  * (C) Copyright 2000, 2001
  * Rich Ireland, Enterasys Networks, rireland@enterasys.com.
+ * 
+ * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
 /*
@@ -354,6 +356,33 @@ static int do_fpga_loadmk(struct cmd_tbl *cmdtp, int flag, int argc,
 }
 #endif
 
+#if defined(CONFIG_CMD_FPGA_PR)
+static int do_fpga_pr(struct cmd_tbl *cmdtp, int flag, int argc, char * const argv[])
+{
+	const char *cmd;
+	char *region;
+	unsigned int region_num = 0;
+	int ret_val = 0;
+	long dev = do_fpga_get_device(argv[0]);
+
+	if (argc != 2 && argc != 3)
+		return CMD_RET_USAGE;
+
+	cmd = argv[1];
+	if (argc == 3)
+		region_num = simple_strtoul(argv[2], &region, 0);
+
+	ret_val = fpga_pr(dev, cmd, region_num);
+
+	if (!ret_val)
+		printf("PR operation successful\n");
+	else
+		printf("PR operation failed\n");
+
+	return ret_val;
+}
+#endif
+
 static struct cmd_tbl fpga_commands[] = {
 	U_BOOT_CMD_MKENT(info, 1, 1, do_fpga_info, "", ""),
 	U_BOOT_CMD_MKENT(dump, 3, 1, do_fpga_dump, "", ""),
@@ -375,6 +404,9 @@ static struct cmd_tbl fpga_commands[] = {
 #endif
 #if defined(CONFIG_CMD_FPGA_LOAD_SECURE)
 	U_BOOT_CMD_MKENT(loads, 6, 1, do_fpga_loads, "", ""),
+#endif
+#if defined(CONFIG_CMD_FPGA_PR)
+	U_BOOT_CMD_MKENT(pr, 3, 1, do_fpga_pr, "", ""),
 #endif
 };
 
@@ -447,5 +479,13 @@ U_BOOT_CMD(fpga, 6, 1, do_fpga_wrapper,
 	 "            -encflag: 0 for device key, 1 for user key, 2 for no encryption\n"
 	 "            -Userkey address: address where user key is stored\n"
 	 "            NOTE: secure bitstream has to be created using Xilinx bootgen tool\n"
+#endif
+#if defined(CONFIG_CMD_FPGA_PR)
+	 "fpga pr <dev> <start|stop> <region>\n"
+	 "            Start or stop the partial reconfiguration process by freezing or\n"
+	 "            unfreezing the specified region\n"
+	 "            -start: starts the partial reconfiguration process\n"
+	 "            -stop: stops the partial reconfiguration process\n"
+	 "            -region: region number to undergo the partial reconfiguration process\n"
 #endif
 );

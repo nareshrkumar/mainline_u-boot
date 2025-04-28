@@ -2,6 +2,8 @@
 /*
  * (C) Copyright 2002
  * Rich Ireland, Enterasys Networks, rireland@enterasys.com.
+ *
+ * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
 /* Generic FPGA support */
@@ -396,3 +398,35 @@ int fpga_compatible2flag(int devnum, const char *compatible)
 	return 0;
 }
 #endif
+
+#if CONFIG_IS_ENABLED(FPGA_PR)
+/*
+ * fpga_pr
+ *	Support partial reconfiguration
+ */
+ int fpga_pr(int devnum, const char *cmd, unsigned int region)
+ {
+	 int ret_val = FPGA_FAIL;           /* assume failure */
+	 const fpga_desc * const desc = fpga_get_desc(devnum);
+ 
+	 if (desc) {
+		 switch (desc->devtype) {
+		 case fpga_altera:
+ #if defined(CONFIG_FPGA_ALTERA)
+			if (strcmp(cmd, "start") == 0)
+				ret_val = altera_freeze(region);
+			else if (strcmp(cmd, "stop") == 0)
+				ret_val = altera_unfreeze(region);
+ #else
+			 fpga_no_sup((char *)__func__, "Altera devices");
+ #endif
+			 break;
+		 default:
+			 printf("%s: Invalid or unsupported device type %d\n",
+				__func__, desc->devtype);
+		 }
+	 }
+ 
+	 return ret_val;
+ }
+ #endif

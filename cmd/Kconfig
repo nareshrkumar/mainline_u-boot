@@ -1229,6 +1229,14 @@ config CMD_FPGAD
 	  fpga_get_reg() function. This functions similarly to the 'md'
 	  command.
 
+config CMD_FPGA_PR
+	bool "fpga pr - support FPGA partial reconfiguration"
+	depends on CMD_FPGA && FPGA_ALTERA
+	select FPGA_PR
+	help
+	  This provides basic functionality for partial reconfiguration which
+	  include the freeze controller support.
+
 config CMD_FUSE
 	bool "fuse - support for the fuse subssystem"
 	help

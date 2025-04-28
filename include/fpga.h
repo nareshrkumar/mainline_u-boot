@@ -2,6 +2,8 @@
 /*
  * (C) Copyright 2002
  * Rich Ireland, Enterasys Networks, rireland@enterasys.com.
+ *
+ * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
 #include <linux/types.h>	       /* for ulong typedef */
@@ -78,6 +80,7 @@ int fpga_loadbitstream(int devnum, char *fpgadata, size_t size,
 		       bitstream_type bstype);
 int fpga_dump(int devnum, const void *buf, size_t bsize);
 int fpga_info(int devnum);
+int fpga_pr(int devnum, const char *cmd, unsigned int region);
 const fpga_desc *fpga_validate(int devnum, const void *buf,
 			       size_t bsize, char *fn);
 int fpga_compatible2flag(int devnum, const char *compatible);

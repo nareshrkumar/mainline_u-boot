@@ -139,6 +139,13 @@ config FPGA_LOAD_SECURE
 	  Enables the fpga loads() functions that are used to load secure
 	  (authenticated or encrypted or both) bitstreams on to FPGA.
 
+config FPGA_PR
+	bool "Support FPGA partial reconfiguration"
+	depends on FPGA
+	help
+	  This defines functions for partial reconfiguration which
+	  include the freeze controller support.
+
 config SPL_FPGA_LOAD_SECURE
 	bool "Enable loading secure bitstreams for SPL"
 	depends on SPL_FPGA

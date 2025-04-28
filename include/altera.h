@@ -2,6 +2,8 @@
 /*
  * (C) Copyright 2002
  * Rich Ireland, Enterasys Networks, rireland@enterasys.com.
+ *
+ * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
 #include <fpga.h>
@@ -87,6 +89,8 @@ typedef struct {
 extern int altera_load(Altera_desc *desc, const void *image, size_t size);
 extern int altera_dump(Altera_desc *desc, const void *buf, size_t bsize);
 extern int altera_info(Altera_desc *desc);
+extern int altera_freeze(unsigned int region);
+extern int altera_unfreeze(unsigned int region);
 
 /* Board specific implementation specific function types
  *********************************************************************/
