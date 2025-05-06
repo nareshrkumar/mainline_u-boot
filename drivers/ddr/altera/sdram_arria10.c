@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2017 Intel Corporation <www.intel.com>
+ * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
 #include <cpu_func.h>
@@ -701,6 +702,19 @@ int ddr_calibration_sequence(void)
 
 	/* setup the dram info within bd */
 	dram_init_banksize();
+
+	if (gd->ram_size != gd->bd->bi_dram[0].size) {
+		printf("DDR: Warning: DRAM size from device tree (%ld MiB)\n",
+		       gd->bd->bi_dram[0].size >> 20);
+		printf(" mismatch with hardware (%ld MiB).\n",
+		       gd->ram_size >> 20);
+	}
+
+	if (gd->bd->bi_dram[0].size > gd->ram_size) {
+		printf("DDR: Warning: DRAM size from device tree > hardware size.\n");
+		printf("Hence, initializing DRAM size to hardware DRAM size.\n");
+		gd->bd->bi_dram[0].size = gd->ram_size;
+	}
 
 	if (of_sdram_firewall_setup(gd->fdt_blob))
 		puts("FW: Error Configuring Firewall\n");
