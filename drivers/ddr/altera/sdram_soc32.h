@@ -6,6 +6,6 @@
 #ifndef	_SDRAM_SOC32_H_
 #define	_SDRAM_SOC32_H_
 
-void sdram_init_ecc_bits(u32 size);
+void sdram_init_ecc_bits(void);
 
 #endif /* _SDRAM_SOC32_H_ */

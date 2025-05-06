@@ -4,7 +4,6 @@
  * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
-#include <cpu_func.h>
 #include <errno.h>
 #include <fdtdec.h>
 #include <init.h>
@@ -23,10 +22,13 @@
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/kernel.h>
+#include <linux/sizes.h>
 
 #include "sdram_soc32.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define PGTABLE_OFF	0x4000
 
 static void sdram_mmr_init(void);
 static u64 sdram_size_calc(void);
@@ -129,10 +131,10 @@ static int emif_reset(void)
 	s2c = readl(DDR_REG_SEQ2CORE);
 
 	debug("c2s=%08x s2c=%08x nr0=%08x nr1=%08x nr2=%08x dst=%08x\n",
-	     c2s, s2c, readl(IO48_MMR_NIOS2_RESERVE0),
-	     readl(IO48_MMR_NIOS2_RESERVE1),
-	     readl(IO48_MMR_NIOS2_RESERVE2),
-	     readl(IO48_MMR_DRAMSTS));
+		c2s, s2c, readl(IO48_MMR_NIOS2_RESERVE0),
+		readl(IO48_MMR_NIOS2_RESERVE1),
+		readl(IO48_MMR_NIOS2_RESERVE2),
+		readl(IO48_MMR_DRAMSTS));
 
 	if (s2c & SEQ2CORE_MASK) {
 		ret = emif_clear();
@@ -162,9 +164,9 @@ static int emif_reset(void)
 	debug("emif_reset interrupt cleared\n");
 
 	debug("nr0=%08x nr1=%08x nr2=%08x\n",
-	     readl(IO48_MMR_NIOS2_RESERVE0),
-	     readl(IO48_MMR_NIOS2_RESERVE1),
-	     readl(IO48_MMR_NIOS2_RESERVE2));
+		readl(IO48_MMR_NIOS2_RESERVE0),
+		readl(IO48_MMR_NIOS2_RESERVE1),
+		readl(IO48_MMR_NIOS2_RESERVE2));
 
 	return 0;
 }
@@ -225,7 +227,7 @@ static u64 sdram_size_calc(void)
 		(dramaddrw & IO48_MMR_DRAMADDRW_CFG_COL_ADDR_WIDTH_MASK));
 
 	size *= (2 << (readl(&socfpga_ecc_hmc_base->ddrioctrl) &
-		       ALT_ECC_HMC_OCP_DDRIOCTRL_IO_SIZE_MSK));
+		 ALT_ECC_HMC_OCP_DDRIOCTRL_IO_SIZE_MSK));
 
 	debug("SDRAM size=%llu\n", size);
 
@@ -264,7 +266,7 @@ static void sdram_mmr_init(void)
 	if ((readl(&socfpga_io48_mmr_base->niosreserve1) >> 6) & 0x1FF) {
 		update_value = readl(&socfpga_io48_mmr_base->niosreserve0);
 		writel(((update_value & 0xFF) >> 5),
-		       &socfpga_ecc_hmc_base->ddrioctrl);
+			&socfpga_ecc_hmc_base->ddrioctrl);
 	}
 
 	ddrioctl = readl(&socfpga_ecc_hmc_base->ddrioctrl);
@@ -352,11 +354,11 @@ static void sdram_mmr_init(void)
 			(ctrlcfg0_cfg_ctrl_burst_len >> 2));
 
 	io48_value = ((((readl(&socfpga_io48_mmr_base->dramtiming0) &
-		      ALT_IO48_DRAMTIME_MEM_READ_LATENCY_MASK) + 2 + 15 +
-		      (ctrlcfg0_cfg_ctrl_burst_len >> 1)) >> 1) -
-		      /* Up to here was in memory cycles so divide by 2 */
-		      caltim1_cfg_rd_to_wr + caltim0_cfg_act_to_rdwr +
-		      caltim4_cfg_pch_to_valid);
+			ALT_IO48_DRAMTIME_MEM_READ_LATENCY_MASK) + 2 + 15 +
+			(ctrlcfg0_cfg_ctrl_burst_len >> 1)) >> 1) -
+			/* Up to here was in memory cycles so divide by 2 */
+			caltim1_cfg_rd_to_wr + caltim0_cfg_act_to_rdwr +
+			caltim4_cfg_pch_to_valid);
 
 	writel(((caltim0_cfg_act_to_act <<
 			ALT_NOC_MPU_DDR_T_SCHED_DDRTIMING_ACTTOACT_LSB) |
@@ -414,23 +416,23 @@ static void sdram_mmr_init(void)
 	/* Enable or disable the SDRAM ECC */
 	if (ctrlcfg1 & IO48_MMR_CTRLCFG1_CTRL_ENABLE_ECC) {
 		setbits_le32(&socfpga_ecc_hmc_base->eccctrl,
-			     (ALT_ECC_HMC_OCP_ECCCTL_AWB_CNT_RST_SET_MSK |
-			      ALT_ECC_HMC_OCP_ECCCTL_CNT_RST_SET_MSK |
-			      ALT_ECC_HMC_OCP_ECCCTL_ECC_EN_SET_MSK));
+				(ALT_ECC_HMC_OCP_ECCCTL_AWB_CNT_RST_SET_MSK |
+				ALT_ECC_HMC_OCP_ECCCTL_CNT_RST_SET_MSK |
+				ALT_ECC_HMC_OCP_ECCCTL_ECC_EN_SET_MSK));
 		clrbits_le32(&socfpga_ecc_hmc_base->eccctrl,
-			     (ALT_ECC_HMC_OCP_ECCCTL_AWB_CNT_RST_SET_MSK |
-			      ALT_ECC_HMC_OCP_ECCCTL_CNT_RST_SET_MSK));
+				(ALT_ECC_HMC_OCP_ECCCTL_AWB_CNT_RST_SET_MSK |
+				ALT_ECC_HMC_OCP_ECCCTL_CNT_RST_SET_MSK));
 		setbits_le32(&socfpga_ecc_hmc_base->eccctrl2,
-			     (ALT_ECC_HMC_OCP_ECCCTL2_RMW_EN_SET_MSK |
-			      ALT_ECC_HMC_OCP_ECCCTL2_AWB_EN_SET_MSK));
+				(ALT_ECC_HMC_OCP_ECCCTL2_RMW_EN_SET_MSK |
+				ALT_ECC_HMC_OCP_ECCCTL2_AWB_EN_SET_MSK));
 	} else {
 		clrbits_le32(&socfpga_ecc_hmc_base->eccctrl,
-			     (ALT_ECC_HMC_OCP_ECCCTL_AWB_CNT_RST_SET_MSK |
-			      ALT_ECC_HMC_OCP_ECCCTL_CNT_RST_SET_MSK |
-			      ALT_ECC_HMC_OCP_ECCCTL_ECC_EN_SET_MSK));
+				(ALT_ECC_HMC_OCP_ECCCTL_AWB_CNT_RST_SET_MSK |
+				ALT_ECC_HMC_OCP_ECCCTL_CNT_RST_SET_MSK |
+				ALT_ECC_HMC_OCP_ECCCTL_ECC_EN_SET_MSK));
 		clrbits_le32(&socfpga_ecc_hmc_base->eccctrl2,
-			     (ALT_ECC_HMC_OCP_ECCCTL2_RMW_EN_SET_MSK |
-			      ALT_ECC_HMC_OCP_ECCCTL2_AWB_EN_SET_MSK));
+				(ALT_ECC_HMC_OCP_ECCCTL2_RMW_EN_SET_MSK |
+				ALT_ECC_HMC_OCP_ECCCTL2_AWB_EN_SET_MSK));
 	}
 }
 
@@ -643,8 +645,8 @@ static int of_sdram_firewall_setup(const void *blob)
 		}
 
 		writel((start_end[0] & ALT_NOC_FW_DDR_ADDR_MASK) |
-		       (start_end[1] << ALT_NOC_FW_DDR_END_ADDR_LSB),
-		       firewall_table[i].cfg_addr);
+			(start_end[1] << ALT_NOC_FW_DDR_END_ADDR_LSB),
+			firewall_table[i].cfg_addr);
 		setbits_le32(firewall_table[i].en_addr,
 			     firewall_table[i].en_bit);
 	}
@@ -719,7 +721,7 @@ int ddr_calibration_sequence(void)
 		puts("FW: Error Configuring Firewall\n");
 
 	if (sdram_is_ecc_enabled())
-		sdram_init_ecc_bits(gd->ram_size);
+		sdram_init_ecc_bits();
 
 	sdram_size_check();
 
