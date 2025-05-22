@@ -411,6 +411,17 @@ int fpga_pr(int devnum, const char *cmd, unsigned int region)
 
 	if (desc) {
 		switch (desc->devtype) {
+		case fpga_altera:
+			if (IS_ENABLED(CONFIG_FPGA_ALTERA)) {
+				if (strcmp(cmd, "start") == 0)
+					ret_val = altera_freeze(region);
+				else if (strcmp(cmd, "stop") == 0)
+					ret_val = altera_unfreeze(region);
+			} else {
+				fpga_no_sup((char *)__func__, "Altera devices");
+			}
+			break;
+
 		default:
 			printf("%s: Invalid or unsupported device type %d\n",
 			       __func__, desc->devtype);

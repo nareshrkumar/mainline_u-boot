@@ -2,6 +2,8 @@
 /*
  * (C) Copyright 2002
  * Rich Ireland, Enterasys Networks, rireland@enterasys.com.
+ *
+ * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
 #include <fpga.h>
@@ -123,6 +125,11 @@ int stratixv_load(Altera_desc *desc, const void *rbf_data, size_t rbf_size);
 #ifdef CONFIG_FPGA_INTEL_SDM_MAILBOX
 int intel_sdm_mb_load(Altera_desc *desc, const void *rbf_data,
 		      size_t rbf_size);
+#endif
+
+#ifdef CONFIG_FPGA_PR
+int altera_freeze(unsigned int region);
+int altera_unfreeze(unsigned int region);
 #endif
 
 #endif /* _ALTERA_H_ */
