@@ -3,6 +3,7 @@
  * U-Boot additions
  *
  * Copyright (C) 2019-2022 Intel Corporation <www.intel.com>
+ * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
 #include "socfpga_agilex-u-boot.dtsi"
@@ -11,7 +12,7 @@
 	aliases {
 		spi0 = &qspi;
 		i2c0 = &i2c1;
-		freeze_br0 = &freeze_controller;
+		freeze-br0 = &freeze_controller;
 	};
 
 	soc {

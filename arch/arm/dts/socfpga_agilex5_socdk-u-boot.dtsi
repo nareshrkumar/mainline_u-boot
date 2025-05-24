@@ -11,7 +11,7 @@
 /{
 	aliases {
 		spi0 = &qspi;
-		freeze_br0 = &freeze_controller;
+		freeze-br0 = &freeze_controller;
 	};
 
 	soc {
