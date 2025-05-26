@@ -4,7 +4,6 @@
  * Copyright (C) 2025 Altera Corporation <www.altera.com>
  */
 
-#include <cpu_func.h>
 #include <errno.h>
 #include <fdtdec.h>
 #include <init.h>
@@ -719,7 +718,7 @@ int ddr_calibration_sequence(void)
 		puts("FW: Error Configuring Firewall\n");
 
 	if (sdram_is_ecc_enabled())
-		sdram_init_ecc_bits(gd->ram_size);
+		sdram_init_ecc_bits();
 
 	sdram_size_check();
 

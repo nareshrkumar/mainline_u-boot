@@ -7,25 +7,59 @@
 #include <asm/system.h>
 #include <linux/sizes.h>
 #include "sdram_soc32.h"
+#include <watchdog.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
 #define PGTABLE_OFF	0x4000
 
 /* Initialize SDRAM ECC bits to avoid false DBE */
-void sdram_init_ecc_bits(u32 size)
+void sdram_init_ecc_bits(void)
 {
-	icache_enable();
+	u32 start;
+	phys_addr_t start_addr, saved_start;
+	phys_size_t size, size_init, saved_size;
+	enum dcache_option option = DCACHE_WRITEBACK;
 
-	memset(0, 0, 0x8000);
-	gd->arch.tlb_addr = 0x4000;
+	if (IS_ENABLED(CONFIG_SYS_ARM_CACHE_WRITETHROUGH))
+		option = DCACHE_WRITETHROUGH;
+	else if (IS_ENABLED(CONFIG_SYS_ARM_CACHE_WRITEALLOC))
+		option = DCACHE_WRITEALLOC;
+
+	start = get_timer(0);
+
+	start_addr = gd->bd->bi_dram[0].start;
+	size = gd->bd->bi_dram[0].size;
+
+	printf("DDRCAL: Initialize ECC RAM (%ld MiB).\n", size >> 20);
+
+	memset((void *)start_addr, 0, PGTABLE_SIZE + PGTABLE_OFF);
+	gd->arch.tlb_addr = start_addr + PGTABLE_OFF;
 	gd->arch.tlb_size = PGTABLE_SIZE;
-
+	start_addr += PGTABLE_SIZE + PGTABLE_OFF;
+	size -= (PGTABLE_OFF + PGTABLE_SIZE);
 	dcache_enable();
 
-	printf("DDRCAL: Scrubbing ECC RAM (%i MiB).\n", size >> 20);
-	memset((void *)0x8000, 0, size - 0x8000);
-	flush_dcache_all();
-	printf("DDRCAL: Scrubbing ECC RAM done.\n");
+	saved_start = start_addr;
+	saved_size = size;
+	/* Set SDRAM region to writethrough to avoid false double-bit error. */
+	mmu_set_region_dcache_behaviour(saved_start, saved_size,
+					DCACHE_WRITETHROUGH);
+
+	while (size > 0) {
+		size_init = min((phys_addr_t)SZ_1G, (phys_addr_t)size);
+		memset((void *)start_addr, 0, size_init);
+		size -= size_init;
+		start_addr += size_init;
+		schedule();
+	}
+
 	dcache_disable();
+
+	/* Restore back to original dcache behaviour. */
+	mmu_set_region_dcache_behaviour(saved_start, saved_size,
+					option);
+
+	printf("DDRCAL: SDRAM-ECC successfully initialized within %d ms\n",
+	       (u32)get_timer(start));
 }
